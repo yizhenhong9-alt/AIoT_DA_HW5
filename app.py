@@ -29,8 +29,19 @@ st.markdown("""
 """)
 
 # -------------------------------
-# 載入模型與測試資料
+# 載入模型
 # -------------------------------
+@st.cache_resource
+def load_model():
+    model = joblib.load("model/ai_detector.pkl")
+    return model
+
+model = load_model()
+
+# -------------------------------
+# 原本載入 train.csv 的部分已註解
+# -------------------------------
+"""
 @st.cache_resource
 def load_model_and_test_data():
     model = joblib.load("model/ai_detector.pkl")
@@ -45,6 +56,7 @@ def load_model_and_test_data():
     return model, X_test, y_test
 
 model, X_test, y_test = load_model_and_test_data()
+"""
 
 # -------------------------------
 # 單篇文章檢測
@@ -97,33 +109,43 @@ if uploaded_file is not None:
         )
 
 # -------------------------------
-# 模型信心分析（依賴 CSV，已註解）
+# 模型信心分析可視化（測試集）已註解
 # -------------------------------
 """
-# 以下程式碼原本讀取 train.csv 來生成信心分布圖
-# 因為 train.csv 太大，部署到 Streamlit Cloud 會失敗
-# 如果需要本地分析，可取消註解並提供 train.csv
+st.markdown("---")
+st.subheader("📊 模型信心分析（測試集）")
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
+probs_test = model.predict_proba(X_test)[:, 1]
 
-# df = pd.read_csv("data/train.csv")
-# X_test = df['text']
-# y_test = df['generated']
-# probs_test = model.predict_proba(X_test)[:, 1]
+# Histogram + KDE（分開繪製，避免圖例重複）
+fig, ax = plt.subplots(figsize=(8,4))
 
-# fig, ax = plt.subplots(figsize=(8,4))
-# ax.hist(probs_test[y_test==1], bins=50, color="red", alpha=0.5, label="AI")
-# ax.hist(probs_test[y_test==0], bins=50, color="blue", alpha=0.5, label="Human")
-# sns.kdeplot(probs_test[y_test==1], color="red", lw=2, ax=ax, label="")
-# sns.kdeplot(probs_test[y_test==0], color="blue", lw=2, ax=ax, label="")
-# ax.set_xlabel("AI 機率")
-# ax.set_ylabel("樣本數")
-# ax.set_title("模型信心分布（測試集）")
-# ax.legend()
-# st.pyplot(fig)
+# 直方圖
+ax.hist(probs_test[y_test==1], bins=50, color="red", alpha=0.5, label="AI")
+ax.hist(probs_test[y_test==0], bins=50, color="blue", alpha=0.5, label="Human")
+
+# KDE 曲線
+sns.kdeplot(probs_test[y_test==1], color="red", lw=2, ax=ax, label="")  # label 空白，避免重複
+sns.kdeplot(probs_test[y_test==0], color="blue", lw=2, ax=ax, label="")  # label 空白，避免重複
+
+ax.set_xlabel("AI 機率")
+ax.set_ylabel("樣本數")
+ax.set_title("模型信心分布（測試集）")
+ax.legend()
+st.pyplot(fig)
+
+# 信心統計量條形圖
+mean_ai = np.mean(probs_test[y_test==1])
+mean_human = np.mean(probs_test[y_test==0])
+uncertain_ratio = ((probs_test>0.4) & (probs_test<0.6)).mean()
+
+fig2, ax2 = plt.subplots(figsize=(6,3))
+ax2.bar(["AI 平均信心", "Human 平均信心", "不確定比例"], 
+        [mean_ai, mean_human, uncertain_ratio],
+        color=["red", "blue", "gray"])
+ax2.set_ylim(0,1)
+for i, v in enumerate([mean_ai, mean_human, uncertain_ratio]):
+    ax2.text(i, v + 0.02, f"{v:.2%}", ha='center')
+ax2.set_title("信心統計量可視化")
+st.pyplot(fig2)
 """
-
-
