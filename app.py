@@ -117,14 +117,14 @@ st.subheader("📊 模型信心分析（測試集）")
 
 probs_test = model.predict_proba(X_test)[:, 1]
 
-# Histogram + KDE（分開繪製，避免圖例重複）
+ Histogram + KDE（分開繪製，避免圖例重複）
 fig, ax = plt.subplots(figsize=(8,4))
 
-# 直方圖
+ 直方圖
 ax.hist(probs_test[y_test==1], bins=50, color="red", alpha=0.5, label="AI")
 ax.hist(probs_test[y_test==0], bins=50, color="blue", alpha=0.5, label="Human")
 
-# KDE 曲線
+ KDE 曲線
 sns.kdeplot(probs_test[y_test==1], color="red", lw=2, ax=ax, label="")  # label 空白，避免重複
 sns.kdeplot(probs_test[y_test==0], color="blue", lw=2, ax=ax, label="")  # label 空白，避免重複
 
@@ -134,7 +134,7 @@ ax.set_title("模型信心分布（測試集）")
 ax.legend()
 st.pyplot(fig)
 
-# 信心統計量條形圖
+ 信心統計量條形圖
 mean_ai = np.mean(probs_test[y_test==1])
 mean_human = np.mean(probs_test[y_test==0])
 uncertain_ratio = ((probs_test>0.4) & (probs_test<0.6)).mean()
@@ -149,3 +149,4 @@ for i, v in enumerate([mean_ai, mean_human, uncertain_ratio]):
 ax2.set_title("信心統計量可視化")
 st.pyplot(fig2)
 """
+
